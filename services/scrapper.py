@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 from urllib.parse import urlparse
 from typing import Set, Tuple, Callable, Optional
 
-def scrape(url: str, limit: int = 0, progress_callback: Optional[Callable[[int, str], None]] = None) -> dict:
+def scrape(url: str, limit: int = 0, generator_callback: Optional[Callable[[Set, Set, bool], None]] = None) -> any:
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"} 
     source = urlparse(url)
     links_stack, links, external = [url], set([url]), set()
@@ -27,16 +27,19 @@ def scrape(url: str, limit: int = 0, progress_callback: Optional[Callable[[int, 
                 if nurl not in links and nurl.rstrip('/') not in links and nurl+'/' not in links:
                     links.add(nurl)
                     links_stack.append(nurl)
-                    if progress_callback:
-                        progress_callback(len(links), nurl)
             else:
                 external.add(link['href'].strip())
+            if generator_callback:
+                yield from generator_callback(links, external, False)
             if limit and len(links) >= limit:
                 break
         if limit and len(links) >= limit:
             break
     
-    return buildScrapeDict(links, external)
+    if generator_callback:
+        yield from generator_callback(links, external, True)
+    else:
+        return buildScrapeDict(links, external)
 
 
 def buildScrapeDict(internalLinks:list[str], externalLinks:list[str]):

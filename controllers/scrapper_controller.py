@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, Response
 import requests
-from bs4 import BeautifulSoup
+import services.scrapper
+import json
+import time
 
 # Define the blueprint for the scrape controller
 scrape_bp = Blueprint('scrape_bp', __name__)
@@ -10,24 +12,32 @@ def webpage():
     return render_template('urlscraper.html')
 
 # Define a route for scraping URLs
-@scrape_bp.route('/scrape', methods=['POST'])
+@scrape_bp.route('/scrape', methods=['GET'])
 def scrape():
-    url = request.json.get('url')
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
-
+    url = request.args.get('url')
+    limit = request.args.get('limit', default=100)
+    # if not url:
+    #     return jsonify({"error": "URL is required"}), 400
+    # try:
+    #     req = requests.get(url)
+    #     if req.status_code != 200:
+    #         return jsonify({"error": "Invalid url."}),500
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
+    
     try:
         # Call the function to scrape URLs from the provided URL
-        urls = scrape_urls(url)
-        return jsonify(urls)
+        # urls = services.scrapper.scrape(url)
+        return Response(scrape_sse_generator(url,int(limit)), mimetype="text/event-stream")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# The function to scrape URLs
-def scrape_urls(start_url):
-    # Send a GET request to the provided URL
-    response = requests.get(start_url)
-    # Parse the page content with BeautifulSoup
-    soup = BeautifulSoup(response.text, 'html.parser')
-    # Extract and return all the URLs found on the page
-    return [a['href'] for a in soup.find_all('a', href=True)]
+def scrape_progress(links: set, external: set, finished:bool):
+    if finished:
+        yield f"data: {json.dumps({'status': 'complete', 'data': services.scrapper.buildScrapeDict(links, external)})}\n\n"
+    else:
+        yield f"data: {json.dumps({'status': 'in-progress', 'progress': len(links)})}\n\n"
+
+def scrape_sse_generator(url,limit):
+    for progress_update in services.scrapper.scrape(url, limit, generator_callback=scrape_progress):
+           yield progress_update
