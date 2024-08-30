@@ -16,18 +16,17 @@ def webpage():
 def scrape():
     url = request.args.get('url')
     limit = request.args.get('limit', default=100)
-    # if not url:
-    #     return jsonify({"error": "URL is required"}), 400
-    # try:
-    #     req = requests.get(url)
-    #     if req.status_code != 200:
-    #         return jsonify({"error": "Invalid url."}),500
-    # except Exception as e:
-    #     return jsonify({"error": str(e)}), 500
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+    try:
+        req = requests.get(url)
+        if req.status_code != 200:
+            return jsonify({"error": "Invalid url."}),500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
     try:
         # Call the function to scrape URLs from the provided URL
-        # urls = services.scrapper.scrape(url)
         return Response(scrape_sse_generator(url,int(limit)), mimetype="text/event-stream")
     except Exception as e:
         return jsonify({"error": str(e)}), 500

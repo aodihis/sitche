@@ -7,6 +7,7 @@ def scrape(url: str, limit: int = 0, generator_callback: Optional[Callable[[Set,
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"} 
     source = urlparse(url)
     links_stack, links, external = [url], set([url]), set()
+    print(source)
     while links_stack:
         vlink = links_stack.pop()
         try:
@@ -49,6 +50,6 @@ def buildScrapeDict(internalLinks:list[str], externalLinks:list[str]):
     for link in internalLinks:
         data['links'].append(link)
     for link in externalLinks:
-        data['links'].append(link)
+        data['external'].append(link)
     return data
 

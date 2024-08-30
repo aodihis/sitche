@@ -8,13 +8,13 @@
         >
     <title>{% block title %}{% endblock %} - SITCHE</title>
     {% endblock %}
+    {% block css%}{% endblock %}
 </head>
 <body>
-    <div class="container">
+    {# <div class="container"> #}
         {% include "layout/nav.html" %}
         <div id="content">{% block content %}{% endblock %}</div>
-        <div id="footer">
-        </div>
-    </div>
+        <div id="footer"></div>
+    {# </div> #}
 </body>
 </html>

@@ -1,4 +1,16 @@
-{% include "layout/base.html" %}
+{% extends  "layout/base.html" %}
+{% block css %}
+    <style>
+    td {
+        width: 250px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
  <section class="hero is-danger is-fullheight-with-navbar">
     <div class="hero-body"> 
         <div class="container is-max-desktop">
@@ -27,7 +39,6 @@
 <section class="section" id="scrape-res-section" style="display: none;">
     <h2 class="title">Results</h2>
     <div id="results-scrape"></div>
-    {% include "components/scrape-results.html" %}
 </section>
 
 <script>
@@ -89,45 +100,69 @@
         // Append thead and tbody to the table
         table.appendChild(thead);
         table.appendChild(tbody);
-        return table
+
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.className = 'column is-half is-multiline table-container';
+        wrapperDiv.appendChild(table);
+        return wrapperDiv
   
     }
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
         const formData = new FormData(form);
-        const url = formData.get('url')
-        
-        onSubmit()
-        // Start the SSE connection
-        const eventSource = new EventSource(`/scrape?url=${encodeURIComponent(url)}`);
-
-        eventSource.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            if (data.status == 'in-progress') {
-                progressDetail.innerHTML= `${data.progress} page found(s).`
-            }
-            if (data.status == 'complete') {
-                results = data.data
-                eventSource.close();
-                internalLinksTable = createTable(results.links)
-
-                resultSContainer.innerHTML = '<h4>Links</h4>'; // Clear previous content if any
-                resultSContainer.appendChild(internalLinksTable);
-
-                if (results.external) {
-                    resultSContainer += '<h4>External</h4>'; 
-                    externalLinksTable = createTable(results.external)
-                    resultSContainer.appendChild(externalLinksTable);
+        const scrapeUrl = formData.get('url')
+        const url = `/scrape?url=${encodeURIComponent(scrapeUrl)}`;
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    // If the server returns an error status (e.g., 500)
+                    return response.text().then(errorMessage => {
+                        throw new Error(errorMessage);
+                    });
                 }
-                onFinish()
-            }
-        };
+                
+                // Start the SSE connection using the same URL as in fetch
+                const eventSource = new EventSource(url);
+                
+                onSubmit()
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
 
-        eventSource.onerror = function(e) {
-            console.error("Error occurred during SSE communication.");
-            console.log(e)
-            eventSource.close();
-        };
+                    if (data.status == 'in-progress') {
+                        progressDetail.innerHTML = `${data.progress} page(s) found.`;
+                    }
+
+                    if (data.status == 'complete') {
+                        const results = data.data;
+                        eventSource.close();
+
+                        // Clear and update the results container
+                        resultSContainer.innerHTML = '<h3>Links</h3>';
+                        const internalLinksTable = createTable(results.links);
+                        resultSContainer.appendChild(internalLinksTable);
+
+                        if (results.external) {
+                            const externalLinksTable = createTable(results.external);
+                            resultSContainer.innerHTML += '<h3>External Links</h3>'; // Adding heading for external links
+                            resultSContainer.appendChild(externalLinksTable);
+                        }
+
+                        onFinish(); // Call your finish function
+                    }
+                };
+
+                eventSource.onerror = function(e) {
+                    console.error("Error occurred during SSE communication.", e);
+                    eventSource.close();
+                };
+            })
+    .catch(error => {
+        console.error("Fetch Error:", error.message);
+    });
+
+
+        
     });
 </script>
+{% endblock %}
