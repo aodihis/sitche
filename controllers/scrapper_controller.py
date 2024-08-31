@@ -20,6 +20,7 @@ def scrape():
         return jsonify({"error": "URL is required"}), 400
     try:
         req = requests.get(url)
+        url = req.url
         if req.status_code != 200:
             return jsonify({"error": "Invalid url."}),500
     except Exception as e:
@@ -31,9 +32,9 @@ def scrape():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-def scrape_progress(links: set, external: set, finished:bool):
+def scrape_progress(links: set, external: set, brokenLinks: set, finished:bool):
     if finished:
-        yield f"data: {json.dumps({'status': 'complete', 'data': services.scrapper.buildScrapeDict(links, external)})}\n\n"
+        yield f"data: {json.dumps({'status': 'complete', 'data': services.scrapper.buildScrapeDict(links, external, brokenLinks)})}\n\n"
     else:
         yield f"data: {json.dumps({'status': 'in-progress', 'progress': len(links)})}\n\n"
 

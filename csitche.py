@@ -4,7 +4,7 @@ import json
 import sys
 from services.scrapper import scrape, buildScrapeDict
 
-def scrape_progress(links: set, external: set, finished: bool) -> any:
+def scrape_progress(links: set, external: set, brokenLinks, finished: bool) -> any:
     if finished:
         yield buildScrapeDict(links, external)
     else:
