@@ -37,6 +37,9 @@
 </section> 
 
 <section class="section" id="scrape-res-section" style="display: none;">
+    <div id="res-notif-error" class="notification is-danger" style="display: none;">
+
+    </div>
     <h2 class="title">Results</h2>
     <div class="buttons">
         <button id="download-excel" class="button is-primary is-light">Download Excel</button>
@@ -54,6 +57,7 @@
     const resultSContainer = document.getElementById('results-scrape')
     const downloadExcelButton = document.getElementById('download-excel')
     const sitemapButton = document.getElementById('create-sitemap')
+    const ResnotifError = document.getElementById('res-notif-error')
     let results = {}
 
 
@@ -169,7 +173,13 @@
         console.error("Fetch Error:", error.message);
     });});
 
+    clearNotif = () => {
+        ResnotifError.innerHTML = ''
+        ResnotifError.display = 'none'
+    }
+    
     downloadExcelButton.addEventListener('click', function(event) {
+        clearNotif()
         downloadExcelButton.disabled = true;
         let dataToDownload = {};
         dataToDownload['filename'] = 'urls-scrape';
@@ -212,6 +222,8 @@
         })
         .catch(error => {
             console.error('There was a problem with the fetch operation:', error);
+            ResnotifError.innerHTML = 'There was a problem with the fetch operation:' + error
+            ResnotifError.display = 'block'
             downloadExcelButton.disabled = false;
 
         });

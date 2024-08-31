@@ -1,9 +1,9 @@
 from flask import Blueprint, request, make_response, send_file, Response
-import requests
-import services.scrapper
-import json
 import pandas as pd
 from io import BytesIO
+from schema.xls_generator import schema as xlsjsonschema
+from jsonschema import validate, ValidationError
+
 # Define the blueprint for the scrape controller
 generator_bp = Blueprint('file_generator_bp', __name__)
 
@@ -25,6 +25,14 @@ def xls_generator():
     if request.headers['Content-Type'] != 'application/json':
         return Response("Invalid content type", status=415)
     content = request.json
+
+    try:
+        # Validate the JSON data against the schema
+        validate(instance=content, schema=xlsjsonschema)
+        print("JSON is valid and correctly formatted.")
+    except ValidationError as e:
+        print(f"JSON is not valid: {e.message}")
+        return Response("JSON is not valid", status=415)
 
     output = BytesIO()
     writter = pd.ExcelWriter(output, engine='xlsxwriter')
