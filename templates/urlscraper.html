@@ -228,5 +228,45 @@
 
         });
     })
+
+    sitemapButton.addEventListener('click', function(event) {
+        clearNotif()
+        sitemapButton.disabled = true;
+        // Define the URL
+        const url = '/generate-sitemap';
+
+        // Make the POST request using fetch
+        fetch(url, {
+            method: 'POST', // Use the POST method
+            headers: {
+                'Content-Type': 'application/json', // Specify the content type
+            },
+            body: JSON.stringify({'urls' : results.links}), // Convert the data to JSON
+        })
+        .then(response => {
+            sitemapButton.disabled = false;
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob(); // If the server responds with a file, use response.blob()
+        })
+        .then(blob => {
+            // Create a link element, use it to download the file
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = 'sitemap.xml'; // Set the file name
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+            ResnotifError.innerHTML = 'There was a problem with the fetch operation:' + error
+            ResnotifError.display = 'block'
+            downloadExcelButton.disabled = false;
+
+        });
+    })
 </script>
 {% endblock %}
