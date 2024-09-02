@@ -54,7 +54,7 @@ To get started with this project, follow the steps below:
 
 ## Usage
 
-Once the application is running, you can access the URL Site Crawler via the root path `/`. Use the web interface to input your desired website URL and explore the crawled links.
+Once the application is running, you can access the URL Site Crawler via `http:\\localhost:5000` Use the web interface to input your desired website URL and explore the crawled links.
 
 For command-line usage, use the following command to save the crawled URLs as a JSON file:
 
