@@ -36,7 +36,7 @@
     </div>
 </section> 
 
-<section class="section" id="scrape-res-section" style="display: none;">
+<section class="section is-fullheight" id="scrape-res-section" style="display: none;">
     <div id="res-notif-error" class="notification is-danger" style="display: none;">
 
     </div>
@@ -45,7 +45,20 @@
         <button id="download-excel" class="button is-primary is-light">Download Excel</button>
         <button id="create-sitemap" class="button is-link is-light">Create Sitemap</button>
       </div>
-    <div id="results-scrape"></div>
+    <div id="results-scrape">
+        <div class="tabs">
+            <ul>
+              <li class="is-active" data-target="res-active-links"><a>Active Links</a></li>
+              <li data-target="res-external-links"><a>External Links</a></li>
+              <li data-target="res-broken-links"><a>Broken Links</a></li>
+            </ul>
+          </div>
+          <div class="tabs-content">
+            <div id="res-active-links"></div>
+            <div id="res-external-links" class="is-hidden"></div>
+            <div id="res-broken-links" class="is-hidden"></div>
+          </div>
+    </div>
     {# {% include 'components/scrape-results.html' %} #}
 </section>
 
@@ -148,16 +161,20 @@
                     if (data.status == 'complete') {
                         results = data.data;
                         eventSource.close();
-
-                        // Clear and update the results container
-                        resultSContainer.innerHTML = '<h3>Links</h3>';
+                        const internalLinsContainer = document.getElementById('res-active-links')
                         const internalLinksTable = createTable(results.links);
-                        resultSContainer.appendChild(internalLinksTable);
+                        internalLinsContainer.appendChild(internalLinksTable)
 
-                        if (results.external) {
+                        if (results.external.length) {
+                            const externalLinsContainer = document.getElementById('res-external-links')
                             const externalLinksTable = createTable(results.external);
-                            resultSContainer.innerHTML += '<h3>External Links</h3>'; // Adding heading for external links
-                            resultSContainer.appendChild(externalLinksTable);
+                            externalLinsContainer.appendChild(externalLinksTable);
+                        }
+
+                        if (results.brokenLinks.length) {
+                            const brokenLinsContainer = document.getElementById('res-broken-links')
+                            const brokenLinksTable = createTable(results.brokenLinks);
+                            brokenLinsContainer.appendChild(brokenLinksTable);
                         }
 
                         onFinish(); // Call your finish function
@@ -268,5 +285,25 @@
 
         });
     })
+
+    document.addEventListener("DOMContentLoaded", function() {
+            const tabs = document.querySelectorAll('.tabs li');
+            const tabContent = document.querySelectorAll('.tabs-content > div')
+
+            tabs.forEach((tab) => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach((item) => item.classList.remove('is-active'))
+                    tab.classList.add('is-active')
+                    const target = tab.dataset.target;
+                    tabContent.forEach((item) => {
+                        if (item.getAttribute('id') === tab.dataset.target) {
+                            item.classList.remove('is-hidden')
+                        } else {
+                            item.classList.add('is-hidden')
+                        }
+                    })
+                })
+            })
+    }); 
 </script>
 {% endblock %}
