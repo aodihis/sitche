@@ -1,0 +1,137 @@
+{% extends  "layout/base.html" %}
+
+{% block css %}
+<style>
+    .is-fullheight-with-nav {
+        min-height: calc(100vh - var(--bulma-navbar-height))
+    }
+
+
+</style>
+{% endblock %}
+{% block content %}
+<section class="section has-text-black is-fullheight-with-nav has-background-info">
+    <div class="container mt-5">
+        <h1 class="is-size-1">Url Checker</h1>
+        <p>URL Checker is a tool for checking the response of a list of URLs, determining whether they are active, broken, or redirected</p>
+
+        <div class="form-box mt-5">
+            <form id="form">
+                <div class="field">
+                    <div class="control is-expanded">
+                      <textarea name="urls" class="textarea is-large" placeholder="Please input your urls here, seperate by a new line." required></textarea>
+                    </div>
+                    
+                </div>
+                <button type="submit" class="button">Submit</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section id="res-container" class="section is-fullheight is-hidden">
+    <h3 class="is-size-2">Results</h3>
+    <div id="results">
+
+    </div>
+</section>
+
+<script>
+    const form = document.getElementById('form')
+    const resHtml = document.getElementById('results')
+    const resContainer = document.getElementById('res-container')
+
+     // Function to create and populate the table
+     const createTable = (data) => {
+       // Create table elements
+        const table = document.createElement('table');
+        table.classList.add('table', 'is-fullwidth', 'is-striped');
+
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+
+        // Create table header
+        const headerRow = document.createElement('tr');
+        const thNo = document.createElement('th');
+        thNo.style.width = '10%';
+        thNo.textContent = 'No';
+        const thUrl = document.createElement('th');
+        thUrl.textContent = 'URL';
+        const thStatus = document.createElement('th');
+        thStatus.textContent = 'Status code';
+        const thRedirect = document.createElement('th');
+        thRedirect.textContent = 'Redirect Url';
+        const therro = document.createElement('th');
+        therro.textContent = 'Error Message';
+        headerRow.appendChild(thNo);
+        headerRow.appendChild(thUrl);
+        headerRow.appendChild(thStatus);
+        headerRow.appendChild(thRedirect);
+        headerRow.appendChild(therro);
+
+        thead.appendChild(headerRow);
+
+        // Create table rows
+        data.forEach((resUrl, index) => {
+            const row = document.createElement('tr');
+
+            const cellNo = document.createElement('th');
+            cellNo.textContent = index + 1;
+            row.appendChild(cellNo);
+
+            const cellUrl = document.createElement('td');
+            cellUrl.textContent = resUrl.url;
+            row.appendChild(cellUrl);
+
+            const cellSc = document.createElement('td');
+            cellSc.textContent = resUrl.status_code;
+            row.appendChild(cellSc);
+
+            const cellRed = document.createElement('td');
+            cellRed.textContent = resUrl.redirect_url;
+            row.appendChild(cellRed);
+
+            const cellEr = document.createElement('td');
+            cellEr.textContent = resUrl.error;
+            row.appendChild(cellEr);
+
+            tbody.appendChild(row);
+        });
+
+        // Append thead and tbody to the table
+        table.appendChild(thead);
+        table.appendChild(tbody);
+
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.className = 'column is-full is-multiline table-container';
+        wrapperDiv.appendChild(table);
+        return wrapperDiv
+  
+    }
+    
+    form.addEventListener('submit', (event) => {
+        event.preventDefault()
+        
+        const formData = new FormData(form);
+        const scrapeUrl = formData.get('urls')
+
+        fetch('/process-url-checker', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ urls: scrapeUrl.split('\n') }) // Splitting URLs by new line
+            })
+        .then(response => response.json())
+        .then(data => {
+            const table = createTable(data)
+            resHtml.appendChild(table)
+            resContainer.classList.remove('is-hidden')
+            resContainer.scrollIntoView()
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    })
+</script>
+{% endblock %}
